@@ -21,7 +21,7 @@ def discover_cheapest_destinations(
     max_price_huf: int = 55000,
     max_stops: int = 1
 ) -> list[dict]:
-    url = "[https://serpapi.com/search.json](https://serpapi.com/search.json)"
+    url = "https://serpapi.com/search.json"
     arrival_area_id = REGION_IDS.get(region_key.upper(), region_key)
 
     params = {
