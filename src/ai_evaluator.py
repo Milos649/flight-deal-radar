@@ -52,10 +52,13 @@ def evaluate_destination(destination_code: str, departure_date: str, city_name: 
     2. A fenti friss hírek alapján van-e bármilyen veszély (sztrájk, lezárás, rossz idő) vagy pozitívum?
     """
 
+    # A Google API által a te fiókodhoz hivatalosan elvárt modellek!
     models_to_try = [
-        "gemini-flash-lite-latest",
-        "gemini-flash-latest",
-        "gemini-2.5-flash"
+        "gemini-3.8-flash",
+        "gemini-3.7-flash",
+        "gemini-3.6-flash",
+        "gemini-3.5-flash",
+        "gemini-3.1-flash-lite"
     ]
     
     for model_name in models_to_try:
