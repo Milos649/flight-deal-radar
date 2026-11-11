@@ -1,5 +1,6 @@
 import os
 import requests
+from datetime import datetime, timedelta
 from dotenv import load_dotenv
 from ingestion import fetch_flight_price
 
@@ -10,6 +11,10 @@ REGION_IDS = {
     "GREECE": "/m/035qy",
     "ITALY": "/m/03rjj",
     "SPAIN": "/m/06mkj",
+    "ROMANIA": "/m/06c1y",
+    "PORTUGAL": "/m/05r4w",
+    "FRANCE": "/m/0f8l9c",
+    "UK": "/m/07ssc",
     "EUROPE": "/m/02j9z",
 }
 
@@ -30,7 +35,7 @@ def discover_cheapest_destinations(
         "arrival_area_id": arrival_area_id,
         "month": month,
         "travel_duration": trip_duration,
-        "stops": str(max_stops),  # 1 = Csak közvetlen járatok (kredit-duplázódás megelőzése)
+        "stops": str(max_stops),
         "currency": "HUF",
         "hl": "hu",
         "api_key": SERPAPI_KEY
@@ -72,10 +77,8 @@ def discover_cheapest_destinations(
                 "airline": airline
             })
 
-    # Ár szerint növekvő sorrendbe rendezzük
     raw_deals.sort(key=lambda x: x["explore_price"])
 
-    # DEDUPLIKÁCIÓ: Egy reptérkód (pl. BGY, NAP, VCE) csak egyszer szerepelhet!
     unique_deals = []
     seen_airports = set()
     for deal in raw_deals:
@@ -89,21 +92,32 @@ def discover_cheapest_destinations(
     return unique_deals
 
 
-def deep_check_top_candidates(candidates: list[dict], top_n: int = 3) -> list[dict]:
+def deep_check_top_candidates(candidates: list[dict], top_n: int = 3, custom_stay_days: int = None) -> list[dict]:
+    """
+    Ha custom_stay_days meg van adva (pl. 0 = egynapos út, 2 = 2 nap, 3 = 3 nap),
+    akkor az Explore által talált legolcsóbb odautazási dátumhoz hozzáadja a kért napokat!
+    """
     verified_flights = []
     for item in candidates[:top_n]:
-        print(f"🔎 [MÉLYELEMZÉS] {item['city_name']} ({item['destination']}): {item['departure_date']} -> {item['return_date']} (Becsült: {item['explore_price']} Ft)")
+        dep_date = item["departure_date"]
+        ret_date = item["return_date"]
+
+        if custom_stay_days is not None and custom_stay_days >= 0:
+            dep_dt = datetime.strptime(dep_date, "%Y-%m-%d")
+            ret_date = (dep_dt + timedelta(days=custom_stay_days)).strftime("%Y-%m-%d")
+
+        print(f"🔎 [MÉLYELEMZÉS] {item['city_name']} ({item['destination']}): {dep_date} -> {ret_date} (Explore alapár: {item['explore_price']} Ft)")
         
         exact_flight = fetch_flight_price(
             origin=item["origin"],
             destination=item["destination"],
-            departure_date=item["departure_date"],
-            return_date=item["return_date"]
+            departure_date=dep_date,
+            return_date=ret_date
         )
         
         if exact_flight:
             exact_flight["city_name"] = item["city_name"]
-            exact_flight["return_date"] = item["return_date"]
+            exact_flight["return_date"] = ret_date
             verified_flights.append(exact_flight)
             
     return verified_flights

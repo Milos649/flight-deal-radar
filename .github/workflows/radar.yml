@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
     inputs:
       search_region:
-        description: 'Keresési régió (AUTO_ROTATE, ITALY, GREECE, SPAIN, EUROPE, vagy ITALY,SPAIN)'
+        description: 'Régió (AUTO_ROTATE, ITALY, GREECE, SPAIN, ROMANIA, PORTUGAL, FRANCE, UK, EUROPE)'
         required: false
         default: 'AUTO_ROTATE'
         type: choice
@@ -15,8 +15,38 @@ on:
           - ITALY
           - GREECE
           - SPAIN
+          - ROMANIA
+          - PORTUGAL
+          - FRANCE
+          - UK
           - EUROPE
           - ITALY,GREECE,SPAIN
+      custom_stay_days:
+        description: 'Hány napos legyen az út? (AUTO = Explore alapértelmezett, 0 = Egynapos reggel-este!)'
+        required: false
+        default: 'AUTO'
+        type: choice
+        options:
+          - AUTO
+          - '0'
+          - '2'
+          - '3'
+          - '4'
+      target_airport:
+        description: '[Célzott Mód] Konkrét reptér IATA kód (pl. OTP Bukaresthez, BGY Milánóhoz - üresen hagyva régiós keresés)'
+        required: false
+        default: ''
+        type: string
+      target_dep_date:
+        description: '[Célzott Mód] Indulási dátum (YYYY-MM-DD, pl. 2027-07-07)'
+        required: false
+        default: ''
+        type: string
+      target_ret_date:
+        description: '[Célzott Mód] Visszaút dátuma (YYYY-MM-DD, pl. 2027-07-12)'
+        required: false
+        default: ''
+        type: string
 
 jobs:
   run-radar:
@@ -53,4 +83,8 @@ jobs:
           TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
           SEARCH_REGION: ${{ github.event.inputs.search_region || 'AUTO_ROTATE' }}
+          CUSTOM_STAY_DAYS: ${{ github.event.inputs.custom_stay_days || '' }}
+          TARGET_AIRPORT: ${{ github.event.inputs.target_airport || '' }}
+          TARGET_DEP_DATE: ${{ github.event.inputs.target_dep_date || '' }}
+          TARGET_RET_DATE: ${{ github.event.inputs.target_ret_date || '' }}
         run: python main.py

@@ -11,7 +11,11 @@ CITY_DAILY_COSTS_EUR = {
     # Olaszország
     "BGY": 90, "MXP": 95, "BLQ": 80, "CIA": 95, "FCO": 95, "PSA": 75, "NAP": 65, "BRI": 60, "CTA": 60, "VCE": 110, "CAG": 70, "RMI": 70, "PMO": 65,
     # Spanyolország
-    "VLC": 70, "MAD": 85, "BCN": 95, "AGP": 75, "PMI": 85, "ALC": 65, "BIO": 80, "SVQ": 70, "LPA": 75, "TFS": 80, "CDT": 60
+    "VLC": 70, "MAD": 85, "BCN": 95, "AGP": 75, "PMI": 85, "ALC": 65, "BIO": 80, "SVQ": 70, "LPA": 75, "TFS": 80, "CDT": 60,
+    # Románia (Beach, Please! / Városlátogatás)
+    "OTP": 55, "CND": 65, "CLJ": 50, "TSR": 45, "TGV": 45,
+    # További népszerű európai célpontok (1-3 napos utakhoz)
+    "CRL": 85, "BRU": 100, "EIN": 90, "LTN": 115, "STN": 115, "BVA": 105, "LIS": 85, "OPO": 75, "MLA": 75, "LCA": 70, "PFO": 70, "BER": 95
 }
 DEFAULT_DAILY_COST_EUR = 75
 

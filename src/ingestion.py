@@ -20,9 +20,16 @@ def fetch_flight_price(origin: str, destination: str, departure_date: str, retur
         "api_key": SERPAPI_KEY
     }
     
+    is_same_day = bool(return_date and return_date == departure_date)
+
     if return_date:
         params["return_date"] = return_date
         params["type"] = "1"
+        if is_same_day:
+            # Egynapos mód: reggeli indulás (04:00-12:00) és esti visszaút (17:00-24:00)
+            params["outbound_times"] = "4,11"
+            params["return_times"] = "17,23"
+            print(f"☀️🌙 [EGYNAPOS MÓD] Reggeli odaút + esti visszaút szűrő aktív ({departure_date})")
     else:
         params["type"] = "2"
 
@@ -36,6 +43,9 @@ def fetch_flight_price(origin: str, destination: str, departure_date: str, retur
 
     best_flights = data.get("best_flights", []) + data.get("other_flights", [])
     if not best_flights:
+        if is_same_day and "outbound_times" in params:
+            print(f"[INFO] Nincs reggel-esti egynapos közvetlen járat ide: {destination} ezen a napon.")
+            return None
         if max_stops == 1:
             print(f"[INFO] Nincs közvetlen járat ide: {destination}, keresés max 1 átszállással...")
             return fetch_flight_price(origin, destination, departure_date, return_date, max_stops=2)
@@ -49,11 +59,14 @@ def fetch_flight_price(origin: str, destination: str, departure_date: str, retur
 
     flights_segments = cheapest.get("flights", [])
     airline = flights_segments[0].get("airline", "Ismeretlen") if flights_segments else "Ismeretlen"
+    dep_time_str = flights_segments[0].get("departure_airport", {}).get("time", "") if flights_segments else ""
     
     stops_count = max(0, len(flights_segments) - 1)
     total_duration_min = cheapest.get("total_duration", 0)
     hours, mins = divmod(total_duration_min, 60)
-    duration_str = f"{hours}ó {mins}p (Odaút: {'Közvetlen' if stops_count == 0 else f'{stops_count} átszállás'})"
+    
+    day_trip_tag = " [1 NAPOS: Reggel-Este]" if is_same_day else ""
+    duration_str = f"{hours}ó {mins}p (Odaút: {dep_time_str}, {'Közvetlen' if stops_count == 0 else f'{stops_count} átszállás'}){day_trip_tag}"
 
     dep_dt = datetime.strptime(departure_date, "%Y-%m-%d")
     days_left = (dep_dt - datetime.now()).days
@@ -88,4 +101,4 @@ def save_price(origin, destination, dep_date, ret_date, airline, price, days_lef
                 airline = excluded.airline,
                 scraped_at = CURRENT_TIMESTAMP
         """, (origin, destination, dep_date, ret_key, airline, price, days_left))
-    print(f"[UPSERT MENTVE] {origin} -> {destination} ({dep_date}): {price} HUF ({airline})")
+    print(f"[UPSERT MENTVE] {origin} -> {destination} ({dep_date} -> {ret_key}): {price} HUF ({airline})")
